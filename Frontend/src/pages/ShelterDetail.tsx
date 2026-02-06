@@ -90,6 +90,15 @@ const ShelterDetail = () => {
         <div className="bg-card rounded-2xl p-5 shadow-md border border-border/50 mb-4">
           <div className="flex items-start justify-between gap-3 mb-4">
             <h1 className="text-xl font-bold">{shelter.name}</h1>
+            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+  <span className="font-medium text-foreground">
+    ⭐ {shelter.rating}
+  </span>
+  <span>
+    ({shelter.reviews} reviews)
+  </span>
+</div>
+
             <span className={isOpen ? 'status-open' : 'status-closed'}>
               <Clock className="w-3.5 h-3.5" />
               {isOpen ? 'Open' : 'Closed'}
@@ -119,7 +128,7 @@ const ShelterDetail = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex gap-3 mb-4">
+        <div className="flex gap-3 mb-6">
           <button onClick={handleNavigate} className="btn-action flex gap-2">
             <Navigation className="w-5 h-5" /> Navigate
           </button>
@@ -138,6 +147,79 @@ const ShelterDetail = () => {
           >
             <CheckCircle className="w-5 h-5" /> Request
           </button>
+        </div>
+
+        {/* INFO BOXES */}
+        <div className="space-y-4">
+          {/* Hours & Features */}
+          <div className="bg-card rounded-2xl p-5 shadow-sm border border-border/50">
+            <h2 className="font-semibold text-lg mb-4">Hours & Features</h2>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-muted-foreground" />
+                <span>{shelter.open_hours}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-muted-foreground" />
+                <span>{shelter.gender === 'all' ? 'All genders welcome' : `${shelter.gender} only`}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Dog className={`w-5 h-5 ${shelter.pet_friendly ? 'text-accent' : 'text-muted-foreground'}`} />
+                <span>{shelter.pet_friendly ? 'Pet friendly' : 'No pets allowed'}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Accessibility className={`w-5 h-5 ${shelter.accessibility ? 'text-accent' : 'text-muted-foreground'}`} />
+                <span>{shelter.accessibility ? 'Wheelchair accessible' : 'Limited accessibility'}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Globe className="w-5 h-5 text-muted-foreground" />
+                <span>{shelter.languages.join(', ')}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Amenities */}
+          <div className="bg-card rounded-2xl p-5 shadow-sm border border-border/50">
+            <h2 className="font-semibold text-lg mb-4">Amenities</h2>
+            <div className="flex flex-wrap gap-2">
+              {shelter.amenities.map((amenity, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full 
+                             text-sm bg-secondary text-secondary-foreground"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  {amenity}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Rules */}
+          <div className="bg-card rounded-2xl p-5 shadow-sm border border-border/50">
+            <h2 className="font-semibold text-lg mb-4">Rules & Requirements</h2>
+            <ul className="space-y-3">
+              {shelter.rules.map((rule, index) => (
+                <li key={index} className="flex items-start gap-3 text-muted-foreground">
+                  <AlertCircle className="w-4 h-4 mt-0.5 text-warning" />
+                  <span>{rule}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div className="bg-card rounded-2xl p-5 shadow-sm border border-border/50">
+            <h2 className="font-semibold text-lg mb-4">Contact</h2>
+            <a href={`tel:${shelter.phone}`} className="flex items-center gap-3 text-primary font-medium">
+              <Phone className="w-5 h-5" />
+              {shelter.phone}
+            </a>
+          </div>
         </div>
 
         {/* Modal */}
