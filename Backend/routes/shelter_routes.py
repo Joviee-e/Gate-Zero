@@ -11,22 +11,24 @@ from services.shelter_service import (
     toggle_emergency_mode
 )
 
-# Blueprint
 shelter_bp = Blueprint("shelter_bp", __name__)
 
 
 # ---------------------------------------------------
-# ADD NEW SHELTER
+# CREATE SHELTER  (POST /api/shelters)
 # ---------------------------------------------------
-@shelter_bp.route("/add", methods=["POST"])
+@shelter_bp.route("", methods=["POST"])
 @jwt_required_ngo
 def add_shelter():
     """
-    NGO adds a new shelter
+    NGO creates a new shelter
     """
 
     data = request.get_json()
     ngo_id = g.ngo["id"]
+
+    if not data:
+        return jsonify({"error": "Missing payload"}), 400
 
     shelter_id = create_shelter(ngo_id, data)
 
@@ -37,9 +39,9 @@ def add_shelter():
 
 
 # ---------------------------------------------------
-# GET ALL SHELTERS FOR LOGGED-IN NGO
+# GET NGO SHELTERS
 # ---------------------------------------------------
-@shelter_bp.route("/my-shelters", methods=["GET"])
+@shelter_bp.route("", methods=["GET"])
 @jwt_required_ngo
 def get_my_shelters():
     """
@@ -50,9 +52,7 @@ def get_my_shelters():
 
     shelters = get_shelters_by_ngo(ngo_id)
 
-    return jsonify({
-        "shelters": shelters
-    }), 200
+    return jsonify({"shelters": shelters}), 200
 
 
 # ---------------------------------------------------
@@ -62,7 +62,7 @@ def get_my_shelters():
 @jwt_required_ngo
 def get_shelter(shelter_id):
     """
-    Fetch specific shelter details
+    Fetch shelter details
     """
 
     shelter = get_shelter_by_id(shelter_id)
@@ -74,13 +74,13 @@ def get_shelter(shelter_id):
 
 
 # ---------------------------------------------------
-# UPDATE SHELTER DETAILS
+# UPDATE SHELTER  (PUT /api/shelters/:id)
 # ---------------------------------------------------
-@shelter_bp.route("/update/<shelter_id>", methods=["PUT"])
+@shelter_bp.route("/<shelter_id>", methods=["PUT"])
 @jwt_required_ngo
 def edit_shelter(shelter_id):
     """
-    Update shelter info (name, address etc.)
+    Update shelter info
     """
 
     data = request.get_json()
@@ -96,7 +96,7 @@ def edit_shelter(shelter_id):
 # ---------------------------------------------------
 # DELETE SHELTER
 # ---------------------------------------------------
-@shelter_bp.route("/delete/<shelter_id>", methods=["DELETE"])
+@shelter_bp.route("/<shelter_id>", methods=["DELETE"])
 @jwt_required_ngo
 def remove_shelter(shelter_id):
     """
@@ -114,7 +114,7 @@ def remove_shelter(shelter_id):
 # ---------------------------------------------------
 # UPDATE AVAILABLE BEDS
 # ---------------------------------------------------
-@shelter_bp.route("/update-beds/<shelter_id>", methods=["PATCH"])
+@shelter_bp.route("/<shelter_id>/beds", methods=["PATCH"])
 @jwt_required_ngo
 def update_beds(shelter_id):
     """
@@ -123,10 +123,13 @@ def update_beds(shelter_id):
 
     data = request.get_json()
 
-    if "available_beds" not in data:
-        return jsonify({"error": "available_beds field required"}), 400
+    if not data or "availableBeds" not in data:
+        return jsonify({"error": "availableBeds field required"}), 400
 
-    updated = update_available_beds(shelter_id, data["available_beds"])
+    updated = update_available_beds(
+        shelter_id,
+        data["availableBeds"]
+    )
 
     if updated == 0:
         return jsonify({"error": "Beds not updated"}), 400
@@ -137,7 +140,7 @@ def update_beds(shelter_id):
 # ---------------------------------------------------
 # TOGGLE EMERGENCY MODE
 # ---------------------------------------------------
-@shelter_bp.route("/toggle-emergency/<shelter_id>", methods=["PATCH"])
+@shelter_bp.route("/<shelter_id>/emergency", methods=["PATCH"])
 @jwt_required_ngo
 def emergency_toggle(shelter_id):
     """
@@ -146,10 +149,13 @@ def emergency_toggle(shelter_id):
 
     data = request.get_json()
 
-    if "status" not in data:
+    if not data or "status" not in data:
         return jsonify({"error": "status field required"}), 400
 
-    updated = toggle_emergency_mode(shelter_id, data["status"])
+    updated = toggle_emergency_mode(
+        shelter_id,
+        data["status"]
+    )
 
     if updated == 0:
         return jsonify({"error": "Emergency status not updated"}), 400

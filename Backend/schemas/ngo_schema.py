@@ -9,7 +9,7 @@ class NGORegisterSchema(Schema):
     Validation for NGO registration
     """
 
-    ngo_name = fields.Str(
+    name = fields.Str(
         required=True,
         validate=validate.Length(min=2, max=120),
         error_messages={"required": "NGO name is required"}
@@ -41,15 +41,8 @@ class NGOLoginSchema(Schema):
     Validation for NGO login
     """
 
-    email = fields.Email(
-        required=True,
-        error_messages={"required": "Valid email required"}
-    )
-
-    password = fields.Str(
-        required=True,
-        error_messages={"required": "Password required"}
-    )
+    email = fields.Email(required=True)
+    password = fields.Str(required=True)
 
 
 # ---------------------------------------------------
@@ -60,5 +53,5 @@ class NGOUpdateSchema(Schema):
     Validation for updating NGO profile
     """
 
-    ngo_name = fields.Str(validate=validate.Length(min=2, max=120))
+    name = fields.Str(validate=validate.Length(min=2, max=120))
     phone = fields.Str(validate=validate.Regexp(r"^[0-9]{10}$"))

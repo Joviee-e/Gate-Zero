@@ -5,8 +5,9 @@ from bson import ObjectId
 
 
 # -------------------------------------------------
-# JWT PROTECTED ROUTE DECORATOR
+# JWT PROTECTED NGO ROUTES
 # -------------------------------------------------
+
 def jwt_required_ngo(fn):
     """
     Protects routes so only authenticated NGOs can access them.
@@ -19,20 +20,21 @@ def jwt_required_ngo(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
-            # Verify JWT token in request header
+            # Verify JWT token
             verify_jwt_in_request()
 
-            # Extract NGO ID from token
+            # NGO id stored in token identity
             ngo_id = get_jwt_identity()
 
             if not ngo_id:
                 return jsonify({"error": "Invalid token"}), 401
 
-            # Fetch NGO from database
             db = current_app.db
-            ngo_collection = db["ngos"]
+            ngos_collection = db["ngos"]
 
-            ngo = ngo_collection.find_one({"_id": ObjectId(ngo_id)})
+            ngo = ngos_collection.find_one({
+                "_id": ObjectId(ngo_id)
+            })
 
             if not ngo:
                 return jsonify({"error": "NGO not found"}), 404
@@ -40,13 +42,17 @@ def jwt_required_ngo(fn):
             # Attach NGO to request context
             g.ngo = {
                 "id": str(ngo["_id"]),
-                "ngo_name": ngo.get("ngo_name"),
+                "name": ngo.get("name"),
                 "email": ngo.get("email"),
-                "phone": ngo.get("phone")
+                "phone": ngo.get("phone"),
+                "verified": ngo.get("verified", False)
             }
 
         except Exception as e:
-            return jsonify({"error": "Authentication failed", "details": str(e)}), 401
+            return jsonify({
+                "error": "Authentication failed",
+                "details": str(e)
+            }), 401
 
         return fn(*args, **kwargs)
 
@@ -54,20 +60,20 @@ def jwt_required_ngo(fn):
 
 
 # -------------------------------------------------
-# OPTIONAL ROLE CHECK (FUTURE SAFE)
+# OPTIONAL NGO ROLE CHECK (FUTURE-PROOF)
 # -------------------------------------------------
+
 def ngo_role_required(fn):
     """
-    Extra protection to ensure only NGO role users access certain routes.
-    Useful if later admin/users are added.
+    Extra protection layer if roles are introduced later.
+    Currently just ensures NGO context exists.
     """
 
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if not hasattr(g, "ngo"):
-            return jsonify({"error": "Unauthorized access"}), 403
+            return jsonify({"error": "Unauthorized"}), 403
 
-        # Role pulled from DB if needed later
         return fn(*args, **kwargs)
 
     return wrapper

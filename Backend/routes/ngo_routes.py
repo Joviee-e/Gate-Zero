@@ -6,7 +6,6 @@ from services.ngo_service import (
     update_ngo_profile
 )
 
-# Blueprint
 ngo_bp = Blueprint("ngo_bp", __name__)
 
 
@@ -27,12 +26,9 @@ def get_profile():
     if not ngo:
         return jsonify({"error": "NGO not found"}), 404
 
-    # Remove sensitive info if present
     ngo.pop("password", None)
 
-    return jsonify({
-        "ngo": ngo
-    }), 200
+    return jsonify({"ngo": ngo}), 200
 
 
 # ---------------------------------------------------
@@ -62,7 +58,7 @@ def update_profile():
 
 
 # ---------------------------------------------------
-# GET NGO DASHBOARD DATA (BASIC)
+# NGO DASHBOARD (BASIC)
 # ---------------------------------------------------
 @ngo_bp.route("/dashboard", methods=["GET"])
 @jwt_required_ngo

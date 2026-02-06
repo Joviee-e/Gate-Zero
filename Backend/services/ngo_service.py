@@ -2,42 +2,59 @@ from flask import current_app
 from bson import ObjectId
 from datetime import datetime
 
+from utils.password import hash_password, verify_password
+from utils.jwt_handler import create_access_token
+
 
 # ---------------------------------------------------
-# CREATE NGO (used during registration if needed)
+# REGISTER NGO
 # ---------------------------------------------------
-def create_ngo(ngo_data):
+def register_ngo(data):
     """
-    Inserts a new NGO into the database
+    Register a new NGO
     """
 
     db = current_app.db
     ngo_collection = db["ngos"]
 
-    ngo_data["created_at"] = datetime.utcnow()
+    existing = ngo_collection.find_one({"email": data.get("email")})
+    if existing:
+        raise ValueError("Email already registered")
 
-    result = ngo_collection.insert_one(ngo_data)
+    ngo_doc = {
+        "name": data.get("name"),
+        "email": data.get("email"),
+        "phone": data.get("phone"),
+        "password": hash_password(data.get("password")),
+        "verified": False,
+        "createdAt": datetime.utcnow(),
+    }
+
+    result = ngo_collection.insert_one(ngo_doc)
 
     return str(result.inserted_id)
 
 
 # ---------------------------------------------------
-# GET NGO BY EMAIL
+# LOGIN NGO
 # ---------------------------------------------------
-def get_ngo_by_email(email):
+def login_ngo(data):
     """
-    Fetch NGO using email
+    Authenticate NGO and return JWT token
     """
 
     db = current_app.db
     ngo_collection = db["ngos"]
 
-    ngo = ngo_collection.find_one({"email": email})
+    ngo = ngo_collection.find_one({"email": data.get("email")})
 
-    if ngo:
-        ngo["_id"] = str(ngo["_id"])
+    if not ngo:
+        return None
 
-    return ngo
+    if not verify_password(data.get("password"), ngo.get("password")):
+        return None
+
+    return create_access_token(str(ngo["_id"]))
 
 
 # ---------------------------------------------------
@@ -64,38 +81,51 @@ def get_ngo_by_id(ngo_id):
 # ---------------------------------------------------
 def update_ngo_profile(ngo_id, update_data):
     """
-    Update NGO details like name, phone etc.
+    Update NGO details like name, phone
     """
+
+    allowed = ["name", "phone"]
+
+    payload = {
+        k: v for k, v in update_data.items()
+        if k in allowed
+    }
+
+    if not payload:
+        return 0
 
     db = current_app.db
     ngo_collection = db["ngos"]
 
     result = ngo_collection.update_one(
         {"_id": ObjectId(ngo_id)},
-        {"$set": update_data}
+        {"$set": payload}
     )
 
     return result.modified_count
 
 
 # ---------------------------------------------------
-# DELETE NGO (rarely used but future safe)
+# GET NGO BY EMAIL
 # ---------------------------------------------------
-def delete_ngo(ngo_id):
+def get_ngo_by_email(email):
     """
-    Deletes an NGO from database
+    Fetch NGO using email
     """
 
     db = current_app.db
     ngo_collection = db["ngos"]
 
-    result = ngo_collection.delete_one({"_id": ObjectId(ngo_id)})
+    ngo = ngo_collection.find_one({"email": email})
 
-    return result.deleted_count
+    if ngo:
+        ngo["_id"] = str(ngo["_id"])
+
+    return ngo
 
 
 # ---------------------------------------------------
-# LIST ALL NGOs (admin/future analytics)
+# LIST ALL NGOs (ADMIN / FUTURE)
 # ---------------------------------------------------
 def list_all_ngos():
     """

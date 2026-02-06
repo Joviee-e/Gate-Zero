@@ -2,33 +2,26 @@ from flask import current_app
 from bson import ObjectId
 from datetime import datetime
 
+from models.shelter_model import ShelterModel
+
 
 # ---------------------------------------------------
-# ADD NEW SHELTER
+# CREATE SHELTER
 # ---------------------------------------------------
 def create_shelter(ngo_id, shelter_data):
     """
-    Create a new shelter under an NGO
+    Create a new shelter under NGO
     """
 
     db = current_app.db
     shelter_collection = db["shelters"]
 
-    shelter_document = {
-        "ngo_id": ngo_id,
-        "name": shelter_data.get("name"),
-        "address": shelter_data.get("address"),
-        "city": shelter_data.get("city"),
-        "state": shelter_data.get("state"),
-        "pincode": shelter_data.get("pincode"),
-        "total_beds": shelter_data.get("total_beds", 0),
-        "available_beds": shelter_data.get("available_beds", 0),
-        "emergency_mode": False,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    }
+    shelter_doc = ShelterModel.create(
+        shelter_data,
+        ngo_id
+    )
 
-    result = shelter_collection.insert_one(shelter_document)
+    result = shelter_collection.insert_one(shelter_doc)
 
     return str(result.inserted_id)
 
@@ -38,55 +31,59 @@ def create_shelter(ngo_id, shelter_data):
 # ---------------------------------------------------
 def get_shelter_by_id(shelter_id):
     """
-    Fetch shelter using shelter ID
+    Fetch shelter using ID
     """
 
     db = current_app.db
     shelter_collection = db["shelters"]
 
-    shelter = shelter_collection.find_one({"_id": ObjectId(shelter_id)})
+    shelter = shelter_collection.find_one({
+        "_id": ObjectId(shelter_id)
+    })
 
     if shelter:
-        shelter["_id"] = str(shelter["_id"])
+        return ShelterModel.to_response(shelter)
 
-    return shelter
+    return None
 
 
 # ---------------------------------------------------
-# GET ALL SHELTERS FOR AN NGO
+# GET NGO SHELTERS
 # ---------------------------------------------------
 def get_shelters_by_ngo(ngo_id):
     """
-    Fetch all shelters belonging to a specific NGO
+    Fetch all shelters belonging to NGO
     """
 
     db = current_app.db
     shelter_collection = db["shelters"]
 
-    shelters = list(shelter_collection.find({"ngo_id": ngo_id}))
+    shelters = shelter_collection.find({
+        "ngoId": ObjectId(ngo_id)
+    })
 
-    for shelter in shelters:
-        shelter["_id"] = str(shelter["_id"])
-
-    return shelters
+    return [
+        ShelterModel.to_response(s)
+        for s in shelters
+    ]
 
 
 # ---------------------------------------------------
-# UPDATE SHELTER DETAILS
+# UPDATE SHELTER
 # ---------------------------------------------------
 def update_shelter(shelter_id, update_data):
     """
-    Update shelter details like name, address etc.
+    Update shelter fields
     """
 
     db = current_app.db
     shelter_collection = db["shelters"]
 
-    update_data["updated_at"] = datetime.utcnow()
+    payload = ShelterModel.update(update_data)
 
     result = shelter_collection.update_one(
         {"_id": ObjectId(shelter_id)},
-        {"$set": update_data}
+        {"$set": payload}
     )
 
     return result.modified_count
@@ -103,7 +100,9 @@ def delete_shelter(shelter_id):
     db = current_app.db
     shelter_collection = db["shelters"]
 
-    result = shelter_collection.delete_one({"_id": ObjectId(shelter_id)})
+    result = shelter_collection.delete_one({
+        "_id": ObjectId(shelter_id)
+    })
 
     return result.deleted_count
 
@@ -113,7 +112,7 @@ def delete_shelter(shelter_id):
 # ---------------------------------------------------
 def update_available_beds(shelter_id, beds_count):
     """
-    Update the number of available beds
+    Update availableBeds
     """
 
     db = current_app.db
@@ -123,8 +122,8 @@ def update_available_beds(shelter_id, beds_count):
         {"_id": ObjectId(shelter_id)},
         {
             "$set": {
-                "available_beds": beds_count,
-                "updated_at": datetime.utcnow()
+                "availableBeds": beds_count,
+                "updatedAt": datetime.utcnow()
             }
         }
     )
@@ -137,7 +136,7 @@ def update_available_beds(shelter_id, beds_count):
 # ---------------------------------------------------
 def toggle_emergency_mode(shelter_id, status):
     """
-    Turn emergency mode ON/OFF for shelter
+    Toggle emergencyEnabled
     """
 
     db = current_app.db
@@ -147,8 +146,8 @@ def toggle_emergency_mode(shelter_id, status):
         {"_id": ObjectId(shelter_id)},
         {
             "$set": {
-                "emergency_mode": status,
-                "updated_at": datetime.utcnow()
+                "emergencyEnabled": status,
+                "updatedAt": datetime.utcnow()
             }
         }
     )
@@ -157,19 +156,19 @@ def toggle_emergency_mode(shelter_id, status):
 
 
 # ---------------------------------------------------
-# LIST ALL SHELTERS (GLOBAL / FUTURE ADMIN)
+# LIST ALL SHELTERS (ADMIN / FUTURE)
 # ---------------------------------------------------
 def list_all_shelters():
     """
-    Returns all shelters in the system
+    Returns all shelters
     """
 
     db = current_app.db
     shelter_collection = db["shelters"]
 
-    shelters = list(shelter_collection.find())
+    shelters = shelter_collection.find()
 
-    for shelter in shelters:
-        shelter["_id"] = str(shelter["_id"])
-
-    return shelters
+    return [
+        ShelterModel.to_response(s)
+        for s in shelters
+    ]

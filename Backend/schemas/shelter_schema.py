@@ -1,4 +1,16 @@
-from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow import Schema, fields, validate, validates_schema, ValidationError
+
+
+# ---------------------------------------------------
+# LOCATION SCHEMA (GeoJSON)
+# ---------------------------------------------------
+class LocationSchema(Schema):
+    type = fields.Str(required=True)
+    coordinates = fields.List(
+        fields.Float(),
+        required=True,
+        validate=validate.Length(equal=2)
+    )
 
 
 # ---------------------------------------------------
@@ -9,101 +21,74 @@ class ShelterBaseSchema(Schema):
     Common fields used in shelter creation & updates
     """
 
-    name = fields.Str(
+    name = fields.Str(required=True, validate=validate.Length(min=2, max=120))
+    address = fields.Str(required=True, validate=validate.Length(min=5, max=250))
+    city = fields.Str(required=True, validate=validate.Length(min=2, max=80))
+
+    phone = fields.Str(
         required=True,
-        validate=validate.Length(min=2, max=120),
-        error_messages={"required": "Shelter name is required"}
+        validate=validate.Regexp(r"^[0-9]{10}$")
     )
 
-    address = fields.Str(
+    location = fields.Nested(LocationSchema, required=True)
+
+    pricePerNight = fields.Int(validate=validate.Range(min=0))
+
+    capacity = fields.Int(
         required=True,
-        validate=validate.Length(min=5, max=250),
-        error_messages={"required": "Address is required"}
+        validate=validate.Range(min=1)
     )
 
-    city = fields.Str(
+    availableBeds = fields.Int(
         required=True,
-        validate=validate.Length(min=2, max=80),
-        error_messages={"required": "City is required"}
+        validate=validate.Range(min=0)
     )
 
-    state = fields.Str(
-        required=True,
-        validate=validate.Length(min=2, max=80),
-        error_messages={"required": "State is required"}
-    )
-
-    pincode = fields.Str(
-        required=True,
-        validate=validate.Regexp(r"^[0-9]{6}$"),
-        error_messages={"required": "Pincode is required"}
-    )
-
-    total_beds = fields.Int(
-        required=True,
-        validate=validate.Range(min=0),
-        error_messages={"required": "Total beds required"}
-    )
-
-    available_beds = fields.Int(
-        required=True,
-        validate=validate.Range(min=0),
-        error_messages={"required": "Available beds required"}
-    )
+    features = fields.List(fields.Str())
 
 
 # ---------------------------------------------------
-# CREATE SHELTER SCHEMA
+# CREATE SHELTER
 # ---------------------------------------------------
 class CreateShelterSchema(ShelterBaseSchema):
-    """
-    Validation for adding shelter
-    """
     pass
 
 
 # ---------------------------------------------------
-# UPDATE SHELTER SCHEMA
+# UPDATE SHELTER
 # ---------------------------------------------------
 class UpdateShelterSchema(Schema):
-    """
-    Validation for updating shelter details
-    All fields optional
-    """
 
     name = fields.Str(validate=validate.Length(min=2, max=120))
     address = fields.Str(validate=validate.Length(min=5, max=250))
     city = fields.Str(validate=validate.Length(min=2, max=80))
-    state = fields.Str(validate=validate.Length(min=2, max=80))
-    pincode = fields.Str(validate=validate.Regexp(r"^[0-9]{6}$"))
-    total_beds = fields.Int(validate=validate.Range(min=0))
-    available_beds = fields.Int(validate=validate.Range(min=0))
+    phone = fields.Str(validate=validate.Regexp(r"^[0-9]{10}$"))
+
+    location = fields.Nested(LocationSchema)
+
+    pricePerNight = fields.Int(validate=validate.Range(min=0))
+    capacity = fields.Int(validate=validate.Range(min=1))
+    availableBeds = fields.Int(validate=validate.Range(min=0))
+
+    emergencyEnabled = fields.Boolean()
+    features = fields.List(fields.Str())
+    status = fields.Str()
 
 
 # ---------------------------------------------------
-# BED UPDATE SCHEMA
+# BED UPDATE
 # ---------------------------------------------------
 class BedUpdateSchema(Schema):
-    """
-    Validation for updating available beds
-    """
 
-    available_beds = fields.Int(
+    availableBeds = fields.Int(
         required=True,
-        validate=validate.Range(min=0),
-        error_messages={"required": "available_beds is required"}
+        validate=validate.Range(min=0)
     )
 
 
 # ---------------------------------------------------
-# EMERGENCY TOGGLE SCHEMA
+# EMERGENCY TOGGLE
 # ---------------------------------------------------
 class EmergencyToggleSchema(Schema):
-    """
-    Validation for emergency mode toggle
-    """
 
-    status = fields.Boolean(
-        required=True,
-        error_messages={"required": "status field is required"}
-    )
+    status = fields.Boolean(required=True)
