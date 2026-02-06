@@ -1,4 +1,4 @@
-import { MapPin, Users, Dog, Accessibility, Clock } from 'lucide-react';
+import { MapPin, Users, Dog, Accessibility, Clock, Star } from 'lucide-react';
 import { Shelter, isShelterOpen, formatDistance, getAvailabilityStatus } from '@/data/shelters';
 import { useNavigate } from 'react-router-dom';
 
@@ -30,6 +30,11 @@ export function ShelterCard({ shelter, distance }: ShelterCardProps) {
           <div className="flex items-center gap-1.5 mt-1 text-muted-foreground">
             <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="text-sm truncate">{shelter.address}</span>
+          </div>
+          <div className="flex items-center gap-2 mt-1 text-muted-foreground text-sm">
+            <Star className="w-4 h-4 text-amber-400" />
+            <span className="font-medium text-foreground">{shelter.rating}</span>
+            <span className="text-xs">({shelter.reviews} reviews)</span>
           </div>
         </div>
         <div className="flex-shrink-0 text-right">

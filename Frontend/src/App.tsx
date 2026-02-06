@@ -10,6 +10,7 @@ import ShelterList from "./pages/ShelterList";
 import ShelterDetail from "./pages/ShelterDetail";
 import Emergency from "./pages/Emergency";
 import Auth from "./pages/Auth";
+import Signup from "./pages/Signup"; // ✅ ADD THIS
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import AddShelter from "./pages/dashboard/AddShelter";
@@ -28,14 +29,15 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Public */}
+            {/* Public Routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/shelters" element={<ShelterList />} />
             <Route path="/shelter/:id" element={<ShelterDetail />} />
             <Route path="/emergency" element={<Emergency />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/signup" element={<Signup />} /> {/* ✅ ADD THIS */}
 
-            {/* Protected Dashboard */}
+            {/* Protected Dashboard Routes */}
             <Route path="/dashboard" element={<DashboardLayout />}>
               <Route index element={<DashboardHome />} />
               <Route path="add-shelter" element={<AddShelter />} />

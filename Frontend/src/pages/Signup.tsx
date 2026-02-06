@@ -6,23 +6,35 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 
-const Auth = () => {
-  const { login } = useAuth();
+const Signup = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
+  const [ngoName, setNgoName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const success = login(email, password);
-
-    if (!success) {
-      setError('Invalid email or password');
+    if (!ngoName || !email || !password) {
+      setError('All fields are required');
       return;
     }
+
+    // 🔹 Dummy user object (frontend only)
+    const newUser = {
+      email,
+      ngo_name: ngoName,
+      password, // stored only for demo
+    };
+
+    // Save to localStorage
+    localStorage.setItem('dummyAccount', JSON.stringify(newUser));
+
+    // Auto-login after signup
+    login(email, password);
 
     navigate('/dashboard');
   };
@@ -31,11 +43,20 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>NGO / Shelter Login</CardTitle>
+          <CardTitle>Create NGO Account</CardTitle>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-2">
+              <Label>NGO Name</Label>
+              <Input
+                value={ngoName}
+                onChange={(e) => setNgoName(e.target.value)}
+                placeholder="Demo NGO"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label>Email</Label>
               <Input
@@ -60,14 +81,13 @@ const Auth = () => {
             )}
 
             <Button type="submit" className="w-full">
-              Login
+              Create Account
             </Button>
 
-            {/* ✅ CREATE ACCOUNT LINK */}
-            <p className="text-xs text-center text-muted-foreground mt-2">
-              Don’t have an account?{' '}
-              <Link to="/signup" className="text-primary underline">
-                Create one
+            <p className="text-xs text-muted-foreground text-center">
+              Already have an account?{' '}
+              <Link to="/auth" className="text-primary underline">
+                Login
               </Link>
             </p>
           </form>
@@ -77,4 +97,4 @@ const Auth = () => {
   );
 };
 
-export default Auth;
+export default Signup;
